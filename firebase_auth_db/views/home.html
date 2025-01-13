@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <title>My First Express App</title>
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/6.2.4/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/6.2.4/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.1.0/firebase-database.js"></script>
+
+    <!-- firebaseUI -->
+    <script src="https://cdn.firebase.com/libs/firebaseui/4.0.0/firebaseui.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <!-- Material Design  -->
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <!-- Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: 'AIzaSyCoQaqrOYyXjmv9IJxeNqXt4K1NQuPz-8w',
+            authDomain: 'node-firebase-fd9fd.firebaseapp.com',
+            databaseURL: 'https://node-firebase-fd9fd.firebaseio.com',
+            projectId: 'node-firebase-fd9fd',
+            storageBucket: 'node-firebase-fd9fd.appspot.com',
+            messagingSenderId: '775051055235',
+            appId: '1:775051055235:web:6331bf08a7a898a9d80bb6'
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Voting App</h2>
+        <button class="btn btn-success float-right mr-2" id="google-signin" onclick='signInWithGoogle()'>
+            SignIn with Google
+        </button>
+        <button class="btn btn-danger float-right mr-2" id="signout" onclick='signOut()'
+            style="display: none;visibility: hidden;">
+            Sign Out
+        </button>
+        <p>Login With Firebase</p>
+        <img id="google-pic" src="" />
+        <h3 id="google-displayName"></h3>
+        <legend id="google-email"></legend>
+        <br />
+        <br />
+        <p>
+            <h5>Add Restaurant: </h5><input id="addRestaurant" />
+            <button class="btn btn-primary" onclick='addRestaurant()'>
+                Add
+            </button>
+        </p>
+
+        <div class="row">
+            <%  let keys = Object.keys(restaurant) %>
+            <% keys.forEach((key)=>{ %>
+            <% let allUser %>
+
+            <% if(restaurant[key].votes){%>
+            <%  allUser = Object.keys(restaurant[key].votes) %>
+            <%}else{%>
+            <% allUser=[]%>
+            <%}%>
+            <div class="col s6 m6 l6">
+                <div class="card blue-grey darken-1">
+                    <div class="card-content white-text">
+                        <span class="card-title"><%= restaurant[key].name %></span>
+            <p>Votes: <%= allUser.length %></p>
+        </div>
+        <div class="card-action">
+            <button onclick='upvote("<%= key %>")' class="btn" href="#">Upvote <i class="material-icons">arrow_upward
+                </i></button>
+            <button onclick='downvote("<%= key %>")' class="btn" href="#">Downvote <i
+                    class="material-icons">arrow_downward</i></button>
+        </div>
+    </div>
+    </div>
+    <%  }) %>
+    </div>
+    </div>
+
+    <!-- <script src="./js//firebaseAuth.js"></script> -->
+    <script>
+        function checkIfLoggedIn() {
+            firebase.auth().onAuthStateChanged(user => {
+                // if (localStorage.getItem('firebase_idToken')) {
+                if (user) {
+                    // do logged in stuff
+                    console.log('user sign in');
+                    // console.log(user);
+
+                    let photoURL = user.photoURL;
+
+                    document.getElementById('google-pic')
+                        .setAttribute('src', photoURL);
+
+                    // document.getElementById('google-pic')
+                    //     .setAttribute('src', localStorage.getItem('google-photo'));
+
+                    document.getElementById('google-signin')
+                        .setAttribute('style', 'display:none; visibility: hidden');
+
+                    document.getElementById('signout')
+                        .setAttribute('style', 'display: inline-block; visibility: visible');
+                } else {
+                    // do not logged in stuff
+                    console.log('user log out');
+                    document.getElementById('google-signin')
+                        .setAttribute('style', 'display:inline-block; visibility: visible');
+
+                    document.getElementById('signout')
+                        .setAttribute('style', 'display: none; visibility: hidden');
+                }
+            });
+            // let user = firebase.auth().currentUser;
+            // console.log(user); // Null is output
+        }
+
+        window.onload = () => {
+            checkIfLoggedIn();
+        }
+
+        function signOut() {
+
+            firebase.auth().signOut();
+
+            // localStorage.removeItem('firebase_idToken');
+            // localStorage.removeItem('google-photo');
+
+            document.getElementById('google-pic')
+                .setAttribute('src', '');
+        }
+
+        function signInWithGoogle() {
+            // Using a popup.
+            var provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    // console.log(result);
+                    document.getElementById('google-displayName').innerHTML = result.user.displayName;
+                    document.getElementById('google-pic').src = result.user.photoURL;
+
+                    // Set IdToken in localStroage of Browser
+                    const idToken = result.credential.idToken;
+
+                    // localStorage.setItem('firebase_idToken', idToken);
+
+                    const photo = result.user.photoURL;
+                    // localStorage.setItem('google-photo', photo);
+
+                    document.getElementById('google-email').innerHTML = result.user.email;
+
+                    checkIfLoggedIn();
+
+                }).catch((error) => {
+                    console.log(error);
+                });
+        }
+    </script>
+
+    <!-- <script src="./js/firebaseVoting.js"></script> -->
+    <script>
+        function addRestaurant() {
+            let database = firebase.database();
+            let restaurantRef = database.ref('/restaurants');
+
+            let restaurantInput = document.getElementById('addRestaurant');
+
+            let restaurantName = restaurantInput.value;
+            restaurantInput.value = '';
+
+            // return restaurantRef.push().key;
+            restaurantRef.push({
+                name: restaurantName,
+                votes: 0,
+                // upvoters: {},
+                // downvoters: {}
+            })
+                .then(() => {
+                    window.location.reload();
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+
+        }
+
+        function upvote(key) {
+            // console.log(key);
+            let user = firebase.auth().currentUser;
+            let userId = user.uid;
+            let displayName = user.displayName;
+
+            let database = firebase.database();
+
+            // let restaurantVotesRef = database.ref('/restaurants/' + key + '/votes' + userId);
+            let restaurantVotesRef = database.ref('/restaurants')
+                .child(key)
+                .child('/votes')
+                .child(userId);
+
+            restaurantVotesRef.set(displayName)
+                .then(() => {
+                    window.location.reload();
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        }
+
+        function downvote(key) {
+            // console.log(key);
+            let user = firebase.auth().currentUser;
+            let userId = user.uid;
+            let displayName = user.displayName;
+
+            let database = firebase.database();
+
+            // let restaurantVotesRef = database.ref('/restaurants/' + key + '/votes' + userId);
+            let restaurantVotesRef = database.ref('/restaurants')
+                .child(key)
+                .child('/votes')
+                .child(userId)
+                .remove()
+                .then(() => {
+                    window.location.reload();
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+            // restaurantVotesRef.remove(userId);
+        }
+
+    </script>
+</body>
+
+</html>

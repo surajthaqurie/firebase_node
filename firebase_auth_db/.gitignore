@@ -1,0 +1,6 @@
+# dependencies folder
+/node_modules
+
+.env
+
+service_Key.json
